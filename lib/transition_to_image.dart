@@ -25,7 +25,7 @@ class TransitionToImage extends StatefulWidget {
     this.alignment = Alignment.center,
     this.repeat = ImageRepeat.noRepeat,
     this.matchTextDirection = false,
-    this.loadingWidget = const CircularProgressIndicator(),
+    this.loadingWidget = const Center(child: const CircularProgressIndicator()),
     this.enableRefresh: true,
   })  : assert(image != null),
         assert(placeholder != null),
@@ -304,11 +304,11 @@ class _TransitionToImageState extends State<TransitionToImage>
           ? (widget.enableRefresh)
               ? GestureDetector(
                   onTap: () => _getImage(reload: true),
-                  child: Center(child: widget.placeholder),
+                  child: widget.placeholder,
                 )
-              : Center(child: widget.placeholder)
+              : widget.placeholder
           : (_status == _TransitionStatus.loading)
-              ? Center(child: widget.loadingWidget)
+              ? widget.loadingWidget
               : (widget.transitionType == TransitionType.fade)
                   ? FadeTransition(
                       opacity: _fadeTween.animate(_animation),
