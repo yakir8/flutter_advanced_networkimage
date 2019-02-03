@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.14]
+
+- Fix TransitionToImage loadingWidget & placeholder padding.
+
 ## [0.3.13]
 
 - Add `autoCenter` in `zoomable_widget`.
