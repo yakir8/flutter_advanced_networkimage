@@ -1,9 +1,17 @@
 import 'dart:ui';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+
+import 'raw_image.dart' show MyRawImage;
+
 import 'package:flutter_advanced_networkimage/provider.dart';
 
-typedef Widget LoadingWidgetBuilder(double progress);
+typedef Widget LoadingWidgetBuilder(
+  BuildContext context,
+  double progress,
+  Uint8List imageData,
+);
 
 class TransitionToImage extends StatefulWidget {
   const TransitionToImage({
@@ -18,6 +26,8 @@ class TransitionToImage extends StatefulWidget {
     this.alignment = Alignment.center,
     this.repeat = ImageRepeat.noRepeat,
     this.matchTextDirection = false,
+    this.invertColors = false,
+//     this.imageFilter,
     this.placeholder: const Icon(Icons.clear),
     this.duration: const Duration(milliseconds: 300),
     this.tween,
@@ -37,6 +47,7 @@ class TransitionToImage extends StatefulWidget {
         assert(alignment != null),
         assert(repeat != null),
         assert(matchTextDirection != null),
+        assert(invertColors != null),
         assert(placeholder != null),
         assert(duration != null),
         assert(curve != null),
@@ -139,6 +150,19 @@ class TransitionToImage extends StatefulWidget {
   /// scope.
   final bool matchTextDirection;
 
+  /// Whether the colors of the image are inverted when drawn.
+  ///
+  /// inverting the colors of an image applies a new color filter to the paint.
+  /// If there is another specified color filter, the invert will be applied
+  /// after it. This is primarily used for implementing smart invert on iOS.
+  ///
+  /// See also:
+  ///
+  ///  * [Paint.invertColors], for the dart:ui implementation.
+  final bool invertColors;
+
+  // final ImageFilter imageFilter;
+
   /// Widget displayed while the target [image] failed to load.
   final Widget placeholder;
 
@@ -210,11 +234,24 @@ class _TransitionToImageState extends State<TransitionToImage>
 
   ImageStream _imageStream;
   ImageInfo _imageInfo;
+  Uint8List _imageData;
   double _progress = 0.0;
 
   _TransitionStatus _status = _TransitionStatus.start;
 
   ImageProvider get _imageProvider => widget.image;
+
+  // bool _isProgressiveJPEG(List<int> data) {
+  //   if (data.contains(0xFFD8)) {
+  //     int count = 0;
+  //     for (int el in data) {
+  //       if (el == 0xFFDA) count++;
+  //       if (count > 1) return true;
+  //     }
+  //   }
+
+  //   return false;
+  // }
 
   @override
   void initState() {
@@ -251,7 +288,8 @@ class _TransitionToImageState extends State<TransitionToImage>
 
   @override
   void dispose() {
-    _imageStream.removeListener(_updateImage);
+    _imageStream.removeListener(
+        ImageStreamListener(_updateImage, onError: _catchBadImage));
     _controller.dispose();
     super.dispose();
   }
@@ -288,6 +326,7 @@ class _TransitionToImageState extends State<TransitionToImage>
   void _getImage({bool reload: false}) {
     if (reload) {
       if (widget.printError) debugPrint('Reloading image.');
+
       _imageProvider.evict();
     }
 
@@ -296,12 +335,18 @@ class _TransitionToImageState extends State<TransitionToImage>
         widget.loadingWidgetBuilder != null) {
       var callback = (_imageProvider as AdvancedNetworkImage).loadingProgress;
       (_imageProvider as AdvancedNetworkImage).loadingProgress =
-          (double progress) {
-        if (mounted)
-          setState(() => _progress = progress);
-        else
-          return oldImageStream?.removeListener(_updateImage);
-        if (callback != null) callback(progress);
+          (double progress, List<int> data) {
+        if (mounted) {
+          setState(() {
+            _progress = progress;
+            if (progress > 0.1) _imageData = Uint8List.fromList(data);
+          });
+        } else {
+          return oldImageStream?.removeListener(
+              ImageStreamListener(_updateImage, onError: _catchBadImage));
+        }
+
+        if (callback != null) callback(progress, data);
       };
     }
 
@@ -322,8 +367,12 @@ class _TransitionToImageState extends State<TransitionToImage>
       setState(() => _status = _TransitionStatus.completed);
     } else {
       setState(() => _status = _TransitionStatus.start);
-      oldImageStream?.removeListener(_updateImage);
-      _imageStream.addListener(_updateImage, onError: _catchBadImage);
+      oldImageStream?.removeListener(
+          ImageStreamListener(_updateImage, onError: _catchBadImage));
+
+      _imageStream.addListener(
+        ImageStreamListener(_updateImage, onError: _catchBadImage),
+      );
       _resolveStatus();
     }
   }
@@ -338,9 +387,10 @@ class _TransitionToImageState extends State<TransitionToImage>
   }
 
   void _catchBadImage(dynamic exception, StackTrace stackTrace) {
-    if (widget.printError) debugPrint(exception.toString());
+    if (widget.printError) debugPrint('$exception\n$stackTrace');
     setState(() => _status = _TransitionStatus.failed);
     _resolveStatus();
+
     if (widget.loadFailedCallback != null) widget.loadFailedCallback();
     if (widget.disableMemoryCache || widget.disableMemoryCacheIfFailed)
       _imageProvider.evict();
@@ -358,7 +408,7 @@ class _TransitionToImageState extends State<TransitionToImage>
         : _status == _TransitionStatus.start ||
                 _status == _TransitionStatus.loading
             ? widget.loadingWidgetBuilder != null
-                ? widget.loadingWidgetBuilder(_progress)
+                ? widget.loadingWidgetBuilder(context, _progress, _imageData)
                 : widget.loadingWidget
             : widget.transitionType == TransitionType.fade
                 ? FadeTransition(
@@ -381,8 +431,8 @@ class _TransitionToImageState extends State<TransitionToImage>
                   );
   }
 
-  RawImage buildRawImage() {
-    return RawImage(
+  MyRawImage buildRawImage() {
+    return MyRawImage(
       image: _imageInfo?.image,
       width: widget.width,
       height: widget.height,
@@ -393,6 +443,8 @@ class _TransitionToImageState extends State<TransitionToImage>
       alignment: widget.alignment,
       repeat: widget.repeat,
       matchTextDirection: widget.matchTextDirection,
+      invertColors: widget.invertColors,
+      // imageFilter: widget.imageFilter,
     );
   }
 }
