@@ -4,6 +4,10 @@ version: 0.5.0
 author: "fuyumi <fnatic.roach@gmail.com>"
 homepage: https://github.com/mchome/flutter_advanced_networkimage
 
+environment:
+  sdk: ">=2.10.0 <3.0.0"
+  flutter: ">=1.6.0 <2.0.0"
+
 dependencies:
   flutter:
     sdk: flutter
@@ -16,7 +20,3 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   test: "^1.6.0"
-
-environment:
-  sdk: ">=2.1.0 <3.0.0"
-  flutter: ">=1.6.0 <2.0.0"

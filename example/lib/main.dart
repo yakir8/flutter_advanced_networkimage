@@ -1,4 +1,3 @@
-import 'dart:ui' show ImageFilter;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -23,9 +22,9 @@ class MyApp extends StatefulWidget {
 }
 
 class Example extends State<MyApp> {
-  final String url = 'https://flutter.io/images/flutter-logo-sharing.png';
+  final String url = 'http://flutter.dev/images/flutter-logo-sharing.png';
   final String svgUrl =
-      'https://flutter.dev/assets/flutter-lockup-4cb0ee072ab312e59784d9fbf4fb7ad42688a7fdaea1270ccf6bbf4f34b7e03f.svg';
+      'http://flutter.dev/assets/shared/flutter/logo/square-5f9330e447c2003f6dc382bb753ad4daedf0d58aef2251a976095823ede2aea6.svg';
 
   @override
   Widget build(BuildContext context) {

@@ -9,7 +9,7 @@ void main() {
   group('Download Test', () {
     test('=> good url', () async {
       var url = 'https://flutter.dev/images/flutter-logo-sharing.png';
-      var result = (await http.get(url)).bodyBytes;
+      var result = (await http.get(Uri.parse(url))).bodyBytes;
 
       expect(
           await loadFromRemote(url, null, 5, const Duration(milliseconds: 100),
@@ -18,8 +18,8 @@ void main() {
           result);
 
       url =
-          'https://flutter.dev/assets/flutter-lockup-4cb0ee072ab312e59784d9fbf4fb7ad42688a7fdaea1270ccf6bbf4f34b7e03f.svg';
-      result = (await http.get(url)).bodyBytes;
+          'https://flutter.dev/assets/shared/flutter/logo/square-5f9330e447c2003f6dc382bb753ad4daedf0d58aef2251a976095823ede2aea6.svg';
+      result = (await http.get(Uri.parse(url))).bodyBytes;
 
       expect(
           await loadFromRemote(url, null, 5, const Duration(milliseconds: 100),
@@ -30,7 +30,7 @@ void main() {
     test('=> good url with progress', () async {
       var url = 'this is a label';
       var realUrl = 'https://flutter.dev/images/flutter-logo-sharing.png';
-      var result = (await http.get(realUrl)).bodyBytes;
+      var result = (await http.get(Uri.parse(realUrl))).bodyBytes;
 
       expect(
           await loadFromRemote(
@@ -48,8 +48,8 @@ void main() {
 
       url = 'this is another label';
       realUrl =
-          'https://flutter.dev/assets/flutter-lockup-4cb0ee072ab312e59784d9fbf4fb7ad42688a7fdaea1270ccf6bbf4f34b7e03f.svg';
-      result = (await http.get(realUrl)).bodyBytes;
+          'https://flutter.dev/assets/shared/flutter/logo/square-5f9330e447c2003f6dc382bb753ad4daedf0d58aef2251a976095823ede2aea6.svg';
+      result = (await http.get(Uri.parse(realUrl))).bodyBytes;
 
       expect(
           await loadFromRemote(
